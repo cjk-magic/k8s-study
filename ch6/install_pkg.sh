@@ -15,9 +15,4 @@ net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 
-sudo modprobe br_netfilter 
-cat <<EOF | sudo tee /proc/sys/net/ipv4/ip_forward
-1
-EOF
-
-sudo sysctl -p
+echo "source <(kubectl completion bash)" >> ~/.bashrc

@@ -8,21 +8,22 @@ Vagrant.configure("2") do |config|
   # Master Node #
   #=============#
 
-  config.vm.define "m-k8s" do |cfg|
-    cfg.vm.box = "ubuntu/focal64"
-    cfg.vm.provider "virtualbox" do |vb|
+  config.vm.define "m-k8s" do |ubuntu|
+  config.vm.boot_timeout = 600 # 10 minutes
+    ubuntu.vm.box = "ubuntu/focal64"
+    ubuntu.vm.provider "virtualbox" do |vb|
       vb.name = "m-k8s"
       vb.cpus = 2
       vb.memory = 4096
     end
-    cfg.vm.host_name = "m-k8s"
-    cfg.vm.network "private_network", ip: "192.168.56.10"
-    cfg.ssh.insert_key = false
-    cfg.vm.network "forwarded_port", guest: 22, host: 10022, auto_correct: true, id: "ssh"
-    cfg.vm.synced_folder "../data", "/vagrant", disabled: true   
-    cfg.vm.provision "shell", path: "install_pkg.sh"
-    cfg.vm.provision "shell", path: "k8s_setup.sh" 
-    cfg.vm.provision "shell", path: "master_node.sh"
+    ubuntu.vm.host_name = "m-k8s"
+    ubuntu.vm.network "private_network", ip: "192.168.56.10"
+    ubuntu.ssh.insert_key = false
+    ubuntu.vm.network "forwarded_port", guest: 22, host: 10022, auto_correct: true, id: "ssh"
+    #ubuntu.vm.synced_folder "../data", "/vagrant", disabled: true   
+    ubuntu.vm.provision "shell", path: "install_pkg.sh"
+    ubuntu.vm.provision "shell", path: "k8s_setup.sh" 
+    ubuntu.vm.provision "shell", path: "master_node.sh"
   end
   
   #==============#
@@ -30,21 +31,22 @@ Vagrant.configure("2") do |config|
   #==============#
 
   (1..N).each do |i|
-    config.vm.define "w#{i}-k8s" do |cfg|
-      cfg.vm.box = "ubuntu/focal64"
-      cfg.vm.provider "virtualbox" do |vb|
+    config.vm.define "w#{i}-k8s" do |ubuntu|
+    config.vm.boot_timeout = 600 # 10 minutes
+      ubuntu.vm.box = "ubuntu/focal64"
+      ubuntu.vm.provider "virtualbox" do |vb|
         vb.name = "w#{i}-k8s"
         vb.cpus = 2
         vb.memory = 2048
       end
-      cfg.vm.host_name = "w#{i}-k8s"
-      cfg.vm.network "private_network", ip: "192.168.56.10#{i}"
-      cfg.ssh.insert_key = false
-      cfg.vm.network "forwarded_port", guest: 22, host: "#{i}0022",auto_correct: true, id: "ssh"
-      cfg.vm.synced_folder "../data", "/vagrant", disabled: true
-      cfg.vm.provision "shell", path: "install_pkg.sh"
-      cfg.vm.provision "shell", path: "k8s_setup.sh" 
-      cfg.vm.provision "shell", path: "work_nodes.sh"
+      ubuntu.vm.host_name = "w#{i}-k8s"
+      ubuntu.vm.network "private_network", ip: "192.168.56.10#{i}"
+      ubuntu.ssh.insert_key = false
+      ubuntu.vm.network "forwarded_port", guest: 22, host: "#{i}0022",auto_correct: true, id: "ssh"
+      #ubuntu.vm.synced_folder "../data", "/vagrant", disabled: true
+      ubuntu.vm.provision "shell", path: "install_pkg.sh"
+      ubuntu.vm.provision "shell", path: "k8s_setup.sh" 
+      ubuntu.vm.provision "shell", path: "work_nodes.sh"
     end
   end
 end

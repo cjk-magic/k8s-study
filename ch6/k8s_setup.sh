@@ -10,4 +10,11 @@ sudo apt update
 sudo apt -y install vim git curl wget kubelet kubeadm kubectl containerd
 sudo apt-mark hold kubelet kubeadm kubectl
 
+sudo systemctl enable containerd
 sudo systemctl enable kubelet
+
+sudo modprobe br_netfilter 
+cat <<EOF | sudo tee /proc/sys/net/ipv4/ip_forward
+1
+EOF
+
