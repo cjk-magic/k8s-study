@@ -11,5 +11,5 @@ variable "nks_version" {
 }
 
 variable "login_key" {
-  defdefault = "nks-token-key"
+  default = "nks-token-key"
 }
