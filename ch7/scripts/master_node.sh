@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # init kubernetes 
-kubeadm init 
+kubeadm init > kubeadm-init.log
 
 # config for master node only 
 mkdir -p /root/.kube
