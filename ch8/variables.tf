@@ -9,3 +9,7 @@ variable "secret_key" {
 variable "nks_version" {
   default = "1.25.8"
 }
+
+variable "login_key" {
+  defdefault = "nks-token-key"
+}
