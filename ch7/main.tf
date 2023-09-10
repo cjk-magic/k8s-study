@@ -22,15 +22,15 @@ resource "ncloud_public_ip" "master_ip" {
 }
 
 resource "ncloud_public_ip" "node1_ip" {
-  server_instance_no = ncloud_server.work_node1.id
+  server_instance_no = ncloud_server.worker_node1.id
 }
 
 resource "ncloud_public_ip" "node2_ip" {
-  server_instance_no = ncloud_server.work_node2.id
+  server_instance_no = ncloud_server.worker_node2.id
 }
 
 resource "ncloud_login_key" "key" {
-  key_name = "ncp-token-key1"
+  key_name = "ncp-token-key"
 }
 
 resource "ncloud_server" "master_node" {
@@ -41,7 +41,7 @@ resource "ncloud_server" "master_node" {
   login_key_name            = ncloud_login_key.key.key_name
 }
 
-resource "ncloud_server" "work_node1" {
+resource "ncloud_server" "worker_node1" {
   subnet_no                 = ncloud_subnet.pub-sub.id
   name                      = "w1-k8s"
   server_image_product_code = "SW.VSVR.OS.LNX64.UBNTU.SVR2004.B050"
@@ -49,7 +49,7 @@ resource "ncloud_server" "work_node1" {
   login_key_name            = ncloud_login_key.key.key_name
 }
 
-resource "ncloud_server" "work_node2" {
+resource "ncloud_server" "worker_node2" {
   subnet_no                 = ncloud_subnet.pub-sub.id
   name                      = "w2-k8s"
   server_image_product_code = "SW.VSVR.OS.LNX64.UBNTU.SVR2004.B050"
@@ -69,14 +69,15 @@ data "ncloud_root_password" "m-k8s-pwd" {
 }
 
 data "ncloud_root_password" "w1-k8s-pwd" {
-  server_instance_no = ncloud_server.work_node1.id 
+  server_instance_no = ncloud_server.worker_node1.id 
   private_key = ncloud_login_key.key.private_key
 }
 
 data "ncloud_root_password" "w2-k8s-pwd" {
-  server_instance_no = ncloud_server.work_node2.id 
+  server_instance_no = ncloud_server.worker_node2.id 
   private_key = ncloud_login_key.key.private_key
 }
+
 
 resource "terraform_data" "connect-m-k8s" {
 
