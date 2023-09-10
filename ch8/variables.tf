@@ -13,3 +13,7 @@ variable "nks_version" {
 variable "login_key" {
   default = "nks-token-key"
 }
+
+variable name {
+  default = "tf-nks"
+}
