@@ -16,7 +16,7 @@ resource "ncloud_vpc" "vpc" {
 resource "ncloud_subnet" "node_subnet" {
   vpc_no         = ncloud_vpc.vpc.id
   subnet         = "10.0.1.0/24"
-  zone           = "KR-1"
+  zone           = "KR-2"
   network_acl_no = ncloud_vpc.vpc.default_network_acl_no
   subnet_type    = "PRIVATE"
   name           = "node-subnet"
@@ -26,17 +26,27 @@ resource "ncloud_subnet" "node_subnet" {
 resource "ncloud_subnet" "lb_subnet" {
   vpc_no         = ncloud_vpc.vpc.id
   subnet         = "10.0.100.0/24"
-  zone           = "KR-1"
+  zone           = "KR-2"
   network_acl_no = ncloud_vpc.vpc.default_network_acl_no
   subnet_type    = "PRIVATE"
   name           = "lb-subnet"
   usage_type     = "LOADB"
 }
 
+resource "ncloud_subnet" "natgw_subnet" {
+  vpc_no         = ncloud_vpc.vpc.id
+  subnet         = "10.0.200.0/24"
+  zone           = "KR-2"
+  network_acl_no = ncloud_vpc.vpc.default_network_acl_no
+  subnet_type    = "PUBLIC" // PUBLIC(Public) | PRIVATE(Private)
+  usage_type     = "NATGW"
+}
+
 # NAT Gateway
 resource "ncloud_nat_gateway" "nat_gateway" {
   vpc_no = ncloud_vpc.vpc.id
-  zone   = "KR-1"
+  subnet_no   = ncloud_subnet.natgw_subnet.id
+  zone   = "KR-2"
   name        = "nat-gw"
   description = "NATGW"
 }
@@ -70,7 +80,7 @@ resource "ncloud_nks_cluster" "cluster" {
   kube_network_plugin         = "cilium"
   subnet_no_list              = [ ncloud_subnet.node_subnet.id ]
   vpc_no                      = ncloud_vpc.vpc.id
-  zone                        = "KR-1"
+  zone                        = "KR-2"
   log {
     audit = true
   }
@@ -89,7 +99,7 @@ resource "ncloud_nks_node_pool" "node_pool" {
   node_count     = 1
   product_code   = "SVR.VSVR.STAND.C002.M008.NET.SSD.B050.G002"
   software_code  = data.ncloud_nks_server_images.images.images[0].value
-  subnet_no      = ncloud_subnet.node_subnet.id
+  #subnet_no      = ncloud_subnet.node_subnet.id
   autoscale {
     enabled = true
     min = 1
