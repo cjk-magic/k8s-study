@@ -7,13 +7,9 @@ variable "secret_key" {
 }
 
 variable "nks_version" {
-  default = "1.25.8"
+  default = "1.25"
 }
 
 variable "login_key" {
-  default = "nks-token-key"
-}
-
-variable name {
-  default = "tf-nks"
+  default = "nks-login-key"
 }
