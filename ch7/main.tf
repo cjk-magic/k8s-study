@@ -1,3 +1,6 @@
+# VPC > User scenario > Scenario 1. Single Public Subnet
+# https://docs.ncloud.com/ko/networking/vpc/vpc_userscenario1.html
+
 provider "ncloud" {
   support_vpc = true
   region      = "KR"
@@ -6,117 +9,100 @@ provider "ncloud" {
 }
 
 resource "ncloud_vpc" "vpc" {
-    ipv4_cidr_block = "10.0.0.0/16"
+  name            = "vpc"
+  ipv4_cidr_block = "10.0.0.0/16"
 }
 
-resource "ncloud_subnet" "pub-sub" {  
+resource "ncloud_subnet" "node_subnet" {
   vpc_no         = ncloud_vpc.vpc.id
   subnet         = "10.0.1.0/24"
   zone           = "KR-2"
   network_acl_no = ncloud_vpc.vpc.default_network_acl_no
-  subnet_type    = "PUBLIC"
+  subnet_type    = "PRIVATE"
+  name           = "node-subnet"
+  usage_type     = "GEN"
 }
 
-resource "ncloud_public_ip" "master_ip" {
-  server_instance_no = ncloud_server.master_node.id
+resource "ncloud_subnet" "lb_subnet" {
+  vpc_no         = ncloud_vpc.vpc.id
+  subnet         = "10.0.100.0/24"
+  zone           = "KR-2"
+  network_acl_no = ncloud_vpc.vpc.default_network_acl_no
+  subnet_type    = "PRIVATE"
+  name           = "lb-subnet"
+  usage_type     = "LOADB"
 }
 
-resource "ncloud_public_ip" "node1_ip" {
-  server_instance_no = ncloud_server.worker_node1.id
+resource "ncloud_subnet" "natgw_subnet" {
+  vpc_no         = ncloud_vpc.vpc.id
+  subnet         = "10.0.200.0/24"
+  zone           = "KR-2"
+  network_acl_no = ncloud_vpc.vpc.default_network_acl_no
+  subnet_type    = "PUBLIC" // PUBLIC(Public) | PRIVATE(Private)
+  usage_type     = "NATGW"
 }
 
-resource "ncloud_public_ip" "node2_ip" {
-  server_instance_no = ncloud_server.worker_node2.id
+# NAT Gateway
+resource "ncloud_nat_gateway" "nat_gateway" {
+  vpc_no = ncloud_vpc.vpc.id
+  subnet_no   = ncloud_subnet.natgw_subnet.id
+  zone   = "KR-2"
+  name        = "nat-gw"
+  description = "NATGW"
 }
 
-resource "ncloud_login_key" "key" {
-  key_name = "ncp-token-key"
+# Route Table
+resource "ncloud_route" "foo" {
+  route_table_no         = ncloud_vpc.vpc.default_private_route_table_no
+  destination_cidr_block = "0.0.0.0/0"
+  target_type            = "NATGW"
+  target_name            = ncloud_nat_gateway.nat_gateway.name
+  target_no              = ncloud_nat_gateway.nat_gateway.id
 }
 
-resource "ncloud_server" "master_node" {
-  subnet_no                 = ncloud_subnet.pub-sub.id
-  name                      = "m-k8s"
-  server_image_product_code = "SW.VSVR.OS.LNX64.UBNTU.SVR2004.B050"
-  server_product_code       = "SVR.VSVR.STAND.C002.M008.NET.SSD.B050.G002"
-  login_key_name            = ncloud_login_key.key.key_name
+data "ncloud_nks_versions" "version" {
+  filter {
+    name = "value"
+    values = [var.nks_version]
+    regex = true
+  }
+}
+resource "ncloud_login_key" "loginkey" {
+  key_name = var.login_key
 }
 
-resource "ncloud_server" "worker_node1" {
-  subnet_no                 = ncloud_subnet.pub-sub.id
-  name                      = "w1-k8s"
-  server_image_product_code = "SW.VSVR.OS.LNX64.UBNTU.SVR2004.B050"
-  server_product_code       = "SVR.VSVR.STAND.C002.M008.NET.SSD.B050.G002"
-  login_key_name            = ncloud_login_key.key.key_name
-}
-
-resource "ncloud_server" "worker_node2" {
-  subnet_no                 = ncloud_subnet.pub-sub.id
-  name                      = "w2-k8s"
-  server_image_product_code = "SW.VSVR.OS.LNX64.UBNTU.SVR2004.B050"
-  server_product_code       = "SVR.VSVR.STAND.C002.M008.NET.SSD.B050.G002"
-  login_key_name            = ncloud_login_key.key.key_name
-}
-
-# 키 파일을 생성하고 로컬에 다운로드.
-resource "local_file" "ssh_key" {
-  filename = "${ncloud_login_key.key.key_name}.pem"
-  content = ncloud_login_key.key.private_key
-}
-
-data "ncloud_root_password" "m-k8s-pwd" {
-  server_instance_no = ncloud_server.master_node.id 
-  private_key = ncloud_login_key.key.private_key
-}
-
-data "ncloud_root_password" "w1-k8s-pwd" {
-  server_instance_no = ncloud_server.worker_node1.id 
-  private_key = ncloud_login_key.key.private_key
-}
-
-data "ncloud_root_password" "w2-k8s-pwd" {
-  server_instance_no = ncloud_server.worker_node2.id 
-  private_key = ncloud_login_key.key.private_key
-}
-
-
-resource "terraform_data" "connect-m-k8s" {
-
-  provisioner "remote-exec" {
-     scripts = [ "./scripts/install_pkg.sh", "./scripts/k8s_setup.sh", "./scripts/master_node.sh"] 
-
-      connection {
-          type = "ssh"
-          user = "root"
-          password = data.ncloud_root_password.m-k8s-pwd.root_password
-          host = ncloud_public_ip.master_ip.public_ip
-      }
+resource "ncloud_nks_cluster" "cluster" {
+  cluster_type                = "SVR.VNKS.STAND.C002.M008.NET.SSD.B050.G002"
+  k8s_version                 = data.ncloud_nks_versions.version.versions.0.value
+  login_key_name              = ncloud_login_key.loginkey.key_name
+  name                        = "sample-cluster"
+  lb_private_subnet_no        = ncloud_subnet.lb_subnet.id
+  kube_network_plugin         = "cilium"
+  subnet_no_list              = [ ncloud_subnet.node_subnet.id ]
+  vpc_no                      = ncloud_vpc.vpc.id
+  zone                        = "KR-2"
+  log {
+    audit = true
   }
 }
 
-resource "terraform_data" "connect-w1-k8s" {
-
-  provisioner "remote-exec" {
-     scripts = [ "./scripts/install_pkg.sh", "./scripts/k8s_setup.sh"] 
-
-      connection {
-          type = "ssh"
-          user = "root"
-          password = data.ncloud_root_password.w1-k8s-pwd.root_password
-          host = ncloud_public_ip.node1_ip.public_ip
-      }
+data "ncloud_nks_server_images" "images"{
+  filter {
+    name = "label"
+    values = ["ubuntu-20.04-64-server"]
   }
 }
 
-resource "terraform_data" "connect-w2-k8s" {
-
-  provisioner "remote-exec" {
-     scripts = [ "./scripts/install_pkg.sh", "./scripts/k8s_setup.sh"] 
-
-      connection {
-          type = "ssh"
-          user = "root"
-          password = data.ncloud_root_password.w2-k8s-pwd.root_password
-          host = ncloud_public_ip.node2_ip.public_ip
-      }
+resource "ncloud_nks_node_pool" "node_pool" {
+  cluster_uuid = ncloud_nks_cluster.cluster.uuid
+  node_pool_name = "node-pool"
+  node_count     = 1
+  product_code   = "SVR.VSVR.STAND.C002.M008.NET.SSD.B050.G002"
+  software_code  = data.ncloud_nks_server_images.images.images[0].value
+  #subnet_no      = ncloud_subnet.node_subnet.id
+  autoscale {
+    enabled = true
+    min = 1
+    max = 2
   }
 }

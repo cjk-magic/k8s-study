@@ -1,3 +1,4 @@
-디딤365 VPC 셋팅 자료 : https://bit.ly/45Z1xMN 
+https://github.com/NaverCloudPlatform/terraform-provider-ncloud/tree/main/examples/nks
 
-private ip를 부여할 것인가? 
+https://bit.ly/3LiFWpU  참고해서 작성 필요
+https://bit.ly/3sPp6J9 
