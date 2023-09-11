@@ -33,6 +33,22 @@ resource "ncloud_subnet" "lb_subnet" {
   usage_type     = "LOADB"
 }
 
+# NAT Gateway
+resource "ncloud_nat_gateway" "nat_gateway" {
+  vpc_no = ncloud_vpc.vpc.id
+  zone   = "KR-1"
+  name        = "nat-gw"
+  description = "NATGW"
+}
+
+# Route Table
+resource "ncloud_route" "foo" {
+  route_table_no         = ncloud_vpc.vpc.default_private_route_table_no
+  destination_cidr_block = "0.0.0.0/0"
+  target_type            = "NATGW"
+  target_name            = ncloud_nat_gateway.nat_gateway.name
+  target_no              = ncloud_nat_gateway.nat_gateway.id
+}
 
 data "ncloud_nks_versions" "version" {
   filter {
@@ -67,38 +83,11 @@ data "ncloud_nks_server_images" "images"{
   }
 }
 
-data "ncloud_nks_server_products" "products" {
-
-  software_code = data.ncloud_nks_server_images.images.images[0].value
-  zone = "KR-1"
-
-  filter {
-    name = "product_type"
-    values = [ "STAND" ]
-  }
-
-  filter {
-    name = "cpu_count"
-    values = [ 2 ]
-  }
-
-  filter {
-    name = "memory_size"
-    values = [ "8GB" ]
-  }
-
-  filter {
-    name = "product_code"
-    values = [ "SSD" ]
-    regex = true
-  }
-}
-
 resource "ncloud_nks_node_pool" "node_pool" {
   cluster_uuid = ncloud_nks_cluster.cluster.uuid
-  node_pool_name = "pool1"
+  node_pool_name = "node-pool"
   node_count     = 1
-  product_code   = data.ncloud_nks_server_products.products.products[0].value
+  product_code   = "SVR.VSVR.STAND.C002.M008.NET.SSD.B050.G002"
   software_code  = data.ncloud_nks_server_images.images.images[0].value
   subnet_no      = ncloud_subnet.node_subnet.id
   autoscale {
