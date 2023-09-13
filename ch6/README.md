@@ -1,3 +1,1 @@
-디딤365 VPC 셋팅 자료 : https://bit.ly/45Z1xMN 
-
-private ip를 부여할 것인가? 
+NCP 환경에서 쿠버네티스 구축
