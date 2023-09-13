@@ -6,10 +6,12 @@ provider "ncloud" {
 }
 
 resource "ncloud_vpc" "vpc" {
-    ipv4_cidr_block = "10.0.0.0/16"
+    name            =  kubernetes
+    ipv4_cidr_block = "10.0.0.0/16"    
 }
 
 resource "ncloud_subnet" "pub-sub" {  
+  name           = kubernetes-sub
   vpc_no         = ncloud_vpc.vpc.id
   subnet         = "10.0.1.0/24"
   zone           = "KR-2"
