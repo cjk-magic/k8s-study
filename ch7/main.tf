@@ -6,7 +6,7 @@ provider "ncloud" {
 }
 
 resource "ncloud_vpc" "vpc" {
-  name            = "vpc"
+  name            = "vpc-nks"
   ipv4_cidr_block = "10.0.0.0/16"
 }
 
