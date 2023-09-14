@@ -1,6 +1,3 @@
-# VPC > User scenario > Scenario 1. Single Public Subnet
-# https://docs.ncloud.com/ko/networking/vpc/vpc_userscenario1.html
-
 provider "ncloud" {
   support_vpc = true
   region      = "KR"
