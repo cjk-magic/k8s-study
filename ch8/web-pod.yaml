@@ -3,10 +3,10 @@ kind: Pod
 metadata:
   name: web-pod
   labels:
-    app: webapp
+    type: web
 spec:
   containers:
-    - name: webserver
-      image: httpd
-      ports:
+  - name: container
+    image: httpd
+    ports:
       - containerPort: 80 
