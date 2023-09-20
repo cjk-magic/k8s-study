@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: svc-demo1
+  name: pod-demo
 spec:
   containers:
   - name: busybox-container
