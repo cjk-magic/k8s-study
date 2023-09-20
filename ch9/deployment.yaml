@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-deploy-1
+spec:
+  selector:
+    matchLabels:
+      app: hello-deploy-1
+  template:
+    metadata:
+      labels:
+        app: hello-deploy-1
+    spec:
+      containers:
+        - name: web
+          image: httpd
