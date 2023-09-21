@@ -7,3 +7,4 @@ spec:
     type: web
   ports:
   - port: 8080
+    targetPort: 80
