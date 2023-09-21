@@ -3,10 +3,10 @@ kind: Deployment
 metadata:
   name: rollout-demo
 spec:
-  replicas: 3
   selector:
   matchLabels:
     app: rollout-demo
+  replicas: 3
   template:
     metadata:
       labels:
