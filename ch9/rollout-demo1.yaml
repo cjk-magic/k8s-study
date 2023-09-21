@@ -4,8 +4,8 @@ metadata:
   name: rollout-demo
 spec:
   selector:
-  matchLabels:
-    app: rollout-demo
+    matchLabels:
+      app: rollout-demo
   replicas: 3
   template:
     metadata:
